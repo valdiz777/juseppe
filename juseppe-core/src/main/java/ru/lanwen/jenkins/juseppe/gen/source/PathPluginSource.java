@@ -30,21 +30,23 @@ public class PathPluginSource implements PluginSource {
 
     @Override
     public List<Plugin> plugins() {
-        try (DirectoryStream<Path> paths = Files.newDirectoryStream(pluginsDir, "*.{hpi,jpi}")) {
-            return StreamSupport.stream(paths.spliterator(), false).map(path -> {
-                try {
-                    LOG.trace("Process file {}", path);
+		try (Stream<Path> paths = Files.walk(pluginsDir)) {
+			return paths
+					.filter(path -> path.toString().endsWith(".hpi") || path.toString().endsWith(".jpi"))
+					.map(path -> {
+				try {
+					LOG.trace("Process file {}", path);
 
-                    return HPI.loadHPI(path.toFile())
-                            .withUrl(pluginsDir.relativize(path).toString());
+					return HPI.loadHPI(path.toFile())
+							.withUrl(pluginsDir.relativize(path).toString());
 
-                } catch (Exception e) {
-                    LOG.error("Fail to get the {} info", path.toAbsolutePath(), e);
-                    return null;
-                }
-            }).filter(Objects::nonNull).collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new RuntimeException(format("Can't read path %s", pluginsDir.toAbsolutePath()), e);
-        }
+				} catch (Exception e) {
+					LOG.error("Fail to get the {} info", path.toAbsolutePath(), e);
+					return null;
+				}
+			}).filter(Objects::nonNull).collect(Collectors.toList());
+		} catch (IOException e) {
+			throw new RuntimeException(format("Can't read path %s", pluginsDir.toAbsolutePath()), e);
+		}
     }
 }
