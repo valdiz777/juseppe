@@ -2,6 +2,8 @@ package ru.lanwen.jenkins.juseppe.files;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.lanwen.jenkins.juseppe.gen.UpdateSiteGen;
+import ru.lanwen.jenkins.juseppe.props.Props;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -16,9 +18,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
 
-import ru.lanwen.jenkins.juseppe.gen.UpdateSiteGen;
-import ru.lanwen.jenkins.juseppe.props.Props;
-
 import static java.lang.String.format;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
@@ -26,7 +25,9 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import static ru.lanwen.jenkins.juseppe.files.WatchEventExtension.hasExt;
 
 /**
- * User: lanwen Date: 26.01.15 Time: 12:43
+ * User: lanwen
+ * Date: 26.01.15
+ * Time: 12:43
  */
 public class WatchFiles extends Thread {
 
@@ -79,68 +80,72 @@ public class WatchFiles extends Thread {
       });
    }
 
+
    @Override
+   @SuppressWarnings("rawtypes, unchecked")
    public void run() {
       LOG.info("Start to watch for changes: {}", path);
-      while (true) {
-         // wait for key to be signalled
-         WatchKey key;
-         try {
-            key = watcher.take();
-         } catch (InterruptedException x) {
-            LOG.debug(String.format("%s: Cancelled watch service", getClass()));
-            break;
-         }
 
-         Path dir = keys.get(key);
+      try {
+         //get the first event before looping
+         WatchKey key = watcher.take();
 
-         if (dir == null) {
-            LOG.error(String.format("%s: WatchKey not recognized!!", getClass()));
-            continue;
-         }
+         while (key != null) {
 
-         for (WatchEvent<?> event : key.pollEvents()) {
-            @SuppressWarnings("rawtypes")
-            WatchEvent.Kind kind = event.kind();
+            Path dir = keys.get(key);
 
-            // Context for directory entry event is the file name of entry
-            @SuppressWarnings("unchecked")
-            Path name = ((WatchEvent<Path>) event).context();
-            Path child = dir.resolve(name);
-            String fileName = child.getFileName().toString();
-
-            if (fileName.endsWith(".hpi") || fileName.endsWith(".jpi")) {
-               LOG.info(String.format("%s: HPI (JPI) list modify found!", getClass()));
-               UpdateSiteGen.updateSite(props).withDefaults().toSave().saveAll();
+            if (dir == null) {
+               LOG.error(String.format("%s: WatchKey: %s is not recognized!", getClass(), key.toString()));
+               continue;
             }
 
-            // print out event
-            LOG.trace(String.format("%s: %s: %s\n", getClass(), event.kind().name(), child));
+            for (WatchEvent<?> event : key.pollEvents()) {
+               WatchEvent.Kind kind = event.kind();
 
-            // if directory is created, and watching recursively, then register it and its sub-directories
-            if (kind == ENTRY_CREATE) {
-               try {
-                  if (Files.isDirectory(child)) {
-                     walkAndRegisterDirectories(child);
+               // Context for directory entry event is the file name of entry
+               Path name = ((WatchEvent<Path>) event).context();
+               Path child = dir.resolve(name);
+               String fileName = child.getFileName().toString();
+
+               if (fileName.endsWith(".hpi") || fileName.endsWith(".jpi")) {
+                  LOG.trace(String.format("%s: HPI (JPI) list modify found!", getClass()));
+                  UpdateSiteGen.updateSite(props).withDefaults().toSave().saveAll();
+               }
+
+               // print out event
+               LOG.trace(String.format("%s: %s: %s\n", getClass(), event.kind().name(), child));
+
+               // if directory is created, and watching recursively, then register it and its sub-directories
+               if (kind == ENTRY_CREATE) {
+                  try {
+                     if (Files.isDirectory(child)) {
+                        walkAndRegisterDirectories(child);
+                     }
+                  } catch (IOException x) {
+                     LOG.debug(String.format("%s: Unable to access %s", getClass(), child));
                   }
-               } catch (IOException x) {
-                  LOG.debug(String.format("%s: Unable to access %s", getClass(), child));
                }
             }
-         }
 
-         // reset key and remove from set if directory no longer accessible
-         boolean valid = key.reset();
-         if (!valid) {
-            keys.remove(key);
+            // reset key and remove from set if directory is no longer accessible
+            boolean valid = key.reset();
 
-            // all directories are inaccessible
-            if (keys.isEmpty()) {
-               LOG.error(String.format("%s: WatchKey map is empty!!", getClass()));
-               break;
+            if (!valid) {
+               keys.remove(key);
+
+               // all directories are inaccessible
+               if (keys.isEmpty()) {
+                  LOG.error(String.format("%s: WatchKey map is empty. All directories are inaccessible!", getClass()));
+                  break;
+               }
             }
+
+            key = watcher.take();
          }
+      } catch (InterruptedException e) {
+         LOG.debug("Cancelled watch service");
       }
+
       LOG.info("Stopping to watch {}", path);
    }
 }

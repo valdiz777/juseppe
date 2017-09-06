@@ -3,7 +3,7 @@
 
     <groupId>ru.lanwen.jenkins</groupId>
     <artifactId>juseppe</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.1.2-SNAPSHOT</version>
     
     <modules>
         <module>juseppe-core</module>

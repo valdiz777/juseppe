@@ -6,7 +6,6 @@ import ru.lanwen.jenkins.juseppe.beans.Plugin;
 import ru.lanwen.jenkins.juseppe.gen.HPI;
 
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -23,14 +22,16 @@ public class PathPluginSource implements PluginSource {
 
     private static final Logger LOG = LoggerFactory.getLogger(PathPluginSource.class);
     private final Path pluginsDir;
+    private final boolean recursiveWatch;
 
-    public PathPluginSource(Path pluginsDir) {
+    public PathPluginSource(Path pluginsDir, boolean recursiveWatch) {
         this.pluginsDir = pluginsDir;
+        this.recursiveWatch = recursiveWatch;
     }
 
     @Override
     public List<Plugin> plugins() {
-		try (Stream<Path> paths = Files.walk(pluginsDir)) {
+		try (Stream<Path> paths = (recursiveWatch)? Files.walk(pluginsDir): Files.list(pluginsDir)) {
 			return paths
 					.filter(path -> path.toString().endsWith(".hpi") || path.toString().endsWith(".jpi"))
 					.map(path -> {
