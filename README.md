@@ -117,6 +117,9 @@ Complete list of vars can be found after `juseppe env` command.
 - `JUSEPPE_BIND_PORT` (`juseppe.jetty.port`)   
   port for juseppe file server. Defaults to `8080`
 
+- `JUSEPPE_RECURSIVE_WATCH` (`juseppe.recursive.watch`)
+  watch for file changes recursively Defaults to `true`
+
 Example: 
 
 `java -jar -Djuseppe.saveto.dir=/tmp/update/ juseppe.jar -w serve` or `JUSEPPE_SAVE_TO_DIR=/tmp/update/ java -jar juseppe.jar -w serve`
