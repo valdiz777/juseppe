@@ -99,7 +99,7 @@ public class WatchFiles extends Thread {
                continue;
             }
 
-            for (WatchEvent<?> event : key.pollEvents()) {
+            key.pollEvents().forEach(event -> {
                WatchEvent.Kind kind = event.kind();
 
                // Context for directory entry event is the file name of entry
@@ -125,7 +125,7 @@ public class WatchFiles extends Thread {
                      LOG.debug(String.format("%s: Unable to access %s", getClass(), child));
                   }
                }
-            }
+            });
 
             // reset key and remove from set if directory is no longer accessible
             boolean valid = key.reset();
