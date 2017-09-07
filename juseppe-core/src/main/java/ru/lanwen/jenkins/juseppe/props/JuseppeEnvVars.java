@@ -114,16 +114,6 @@ public final class JuseppeEnvVars {
             }
         },
 
-        JUSEPPE_ENV_ENUM(
-                JuseppeEnvVars.JUSEPPE_BIND_PORT,
-                "port for juseppe file server. Defaults to `8080`"
-        ) {
-            @Override
-            public String resolved() {
-                return String.valueOf(populated().getPort());
-            }
-        },
-
         JUSEPPE_RECURSIVE_WATCH(
                  JuseppeEnvVars.JUSEPPE_RECURSIVE_WATCH,
                  "watch for file changes recursively. Defaults to `true`"

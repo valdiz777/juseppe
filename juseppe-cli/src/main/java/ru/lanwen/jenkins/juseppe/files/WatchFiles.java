@@ -31,16 +31,16 @@ import static ru.lanwen.jenkins.juseppe.files.WatchEventExtension.hasExt;
  */
 public class WatchFiles extends Thread {
 
-   private static final Logger LOG = LoggerFactory.getLogger(WatchFiles.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WatchFiles.class);
 
-   private WatchService watcher;
-   private Map<WatchKey, Path> keys;
-   private Path path;
-   private Props props;
+    private WatchService watcher;
+    private Map<WatchKey, Path> keys;
+    private Path path;
+    private Props props;
 
-   private WatchFiles() {
-      setDaemon(true);
-   }
+    private WatchFiles() {
+       setDaemon(true);
+    }
 
    public WatchFiles configureFor(Props props) throws IOException {
       this.props = props;
