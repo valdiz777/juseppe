@@ -84,6 +84,7 @@ public class WatchFiles extends Thread {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void run() {
         LOG.info("Start to watch for changes: {}", path);
         try {
@@ -94,7 +95,7 @@ public class WatchFiles extends Thread {
                 Path dir = keys.get(key);
 
                 if (dir == null) {
-                    LOG.error(String.format("%s: WatchKey: %s is not recognized!", getClass(), key.toString()));
+                    LOG.error("{}: WatchKey: {} is not recognized!", getClass(), key.toString());
                     continue;
                 }
 
@@ -107,12 +108,12 @@ public class WatchFiles extends Thread {
                     String fileName = child.getFileName().toString();
 
                     if (fileName.endsWith(".hpi") || fileName.endsWith(".jpi")) {
-                        LOG.trace(String.format("%s: HPI (JPI) list modify found!", getClass()));
+                        LOG.trace("{}: HPI (JPI) list modify found!", getClass());
                         UpdateSiteGen.updateSite(props).withDefaults().toSave().saveAll();
                     }
 
                     // print out event
-                    LOG.trace(String.format("%s: %s: %s\n", getClass(), event.kind().name(), child));
+                    LOG.trace("{}: {}: {}\n", getClass(), event.kind().name(), child);
 
                     // if directory is created, and watching recursively, then register it and its sub-directories
                     if (kind == ENTRY_CREATE) {
@@ -121,7 +122,7 @@ public class WatchFiles extends Thread {
                                 walkAndRegisterDirectories(child);
                             }
                         } catch (IOException x) {
-                            LOG.debug(String.format("%s: Unable to access %s", getClass(), child));
+                            LOG.debug("{}: Unable to access {}", getClass(), child);
                         }
                     }
                 });
@@ -134,7 +135,7 @@ public class WatchFiles extends Thread {
 
                     // all directories are inaccessible
                     if (keys.isEmpty()) {
-                        LOG.error(String.format("%s: WatchKey map is empty. All directories are inaccessible!", getClass()));
+                        LOG.error("{} WatchKey map is empty. All directories are inaccessible!", getClass());
                         break;
                     }
                 }

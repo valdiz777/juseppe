@@ -120,7 +120,7 @@ public final class JuseppeEnvVars {
         ) {
             @Override
             public String resolved() {
-                return String.valueOf(populated().getPort());
+                return String.valueOf(populated().getRecursiveWatch());
             }
         };
 
