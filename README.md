@@ -118,6 +118,7 @@ Complete list of vars can be found after `juseppe env` command.
   port for juseppe file server. Defaults to `8080`
 
 - `JUSEPPE_RECURSIVE_WATCH` (`juseppe.recursive.watch`)
+
   watch for file changes recursively. Defaults to `true`
 
 Example: 
